@@ -33,6 +33,7 @@ voice_label = st.selectbox("Choose Voice", list(voice_options.values()))
 
 # === TTS + UPLOAD ===
 def synthesize_and_upload(paragraphs, voice):
+    def synthesize_and_upload(paragraphs, voice):
     s3 = boto3.client(
         "s3",
         aws_access_key_id=AWS_ACCESS_KEY,
@@ -43,6 +44,7 @@ def synthesize_and_upload(paragraphs, voice):
     result = {}
     os.makedirs("temp", exist_ok=True)
 
+    index = 2  # Start index from 2
     for key, text in paragraphs.items():
         st.write(f"🛠️ Processing: `{key}`")
 
@@ -67,17 +69,18 @@ def synthesize_and_upload(paragraphs, voice):
             f.write(response.content)
 
         s3_key = f"{S3_PREFIX}{filename}"
-        s3.upload_file(
-            local_path, AWS_BUCKET, s3_key,
-        )
+        s3.upload_file(local_path, AWS_BUCKET, s3_key)
 
         cdn_url = f"{CDN_BASE}{s3_key}"
+        audio_url_key = f"audio_url{index}"  # Dynamic key name
+
         result[key] = {
             "text": text,
-            "audio_url": cdn_url,
+            audio_url_key: cdn_url,
             "voice": voice
         }
 
+        index += 1
         os.remove(local_path)
 
     return result
