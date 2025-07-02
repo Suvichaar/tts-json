@@ -43,9 +43,9 @@ def synthesize_and_upload(paragraphs, voice):
     result = {}
     os.makedirs("temp", exist_ok=True)
 
-    index = 2  # Start from slide2, audio_url2
-    for key, text in paragraphs.items():
-        st.write(f"🛠️ Processing: `{key}`")
+    index = 2  # Start from slide2, s2paragraph1, audio_url2
+    for text in paragraphs.values():
+        st.write(f"🛠️ Processing: slide{index}")
 
         response = requests.post(
             AZURE_TTS_URL,
@@ -69,12 +69,16 @@ def synthesize_and_upload(paragraphs, voice):
 
         s3_key = f"{S3_PREFIX}{filename}"
         s3.upload_file(local_path, AWS_BUCKET, s3_key)
-
         cdn_url = f"{CDN_BASE}{s3_key}"
 
-        result[f"slide{index}"] = {
-            key: text,
-            f"audio_url{index}": cdn_url,
+        # Build result dict
+        slide_key = f"slide{index}"
+        paragraph_key = f"s{index}paragraph1"
+        audio_key = f"audio_url{index}"
+
+        result[slide_key] = {
+            paragraph_key: text,
+            audio_key: cdn_url,
             "voice": voice
         }
 
